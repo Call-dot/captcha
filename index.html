@@ -1,0 +1,751 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🔐 CAPTCHA Suite - Comprehensive Challenge System</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+
+        /* Navigation */
+        nav {
+            background: rgba(255, 255, 255, 0.95);
+            padding: 15px 30px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+        nav .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        nav .logo {
+            font-size: 24px;
+            font-weight: bold;
+            color: #667eea;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        nav ul {
+            list-style: none;
+            display: flex;
+            gap: 30px;
+            align-items: center;
+        }
+
+        nav a {
+            text-decoration: none;
+            color: #333;
+            font-weight: 500;
+            transition: color 0.3s;
+        }
+
+        nav a:hover {
+            color: #667eea;
+        }
+
+        /* Hero Section */
+        .hero {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 80px 20px;
+            text-align: center;
+        }
+
+        .hero .container {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        .hero h1 {
+            font-size: 48px;
+            margin-bottom: 20px;
+        }
+
+        .hero p {
+            font-size: 20px;
+            margin-bottom: 30px;
+            opacity: 0.9;
+        }
+
+        .cta-buttons {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 15px 30px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .btn-primary {
+            background: white;
+            color: #667eea;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+        }
+
+        .btn-secondary {
+            background: transparent;
+            color: white;
+            border: 2px solid white;
+        }
+
+        .btn-secondary:hover {
+            background: white;
+            color: #667eea;
+        }
+
+        /* Main Container */
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        /* Sections */
+        section {
+            padding: 60px 20px;
+            background: white;
+            margin: 20px 0;
+            border-radius: 12px;
+        }
+
+        section.alt {
+            background: #f9f9f9;
+        }
+
+        section h2 {
+            font-size: 32px;
+            margin-bottom: 30px;
+            text-align: center;
+            color: #333;
+        }
+
+        /* Challenge Grid */
+        .challenge-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 40px;
+        }
+
+        .challenge-card {
+            background: white;
+            border: 2px solid #e0e0e0;
+            border-radius: 12px;
+            padding: 25px;
+            text-align: center;
+            transition: all 0.3s;
+            cursor: pointer;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+
+        .challenge-card:hover {
+            border-color: #667eea;
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.2);
+        }
+
+        .challenge-card .icon {
+            font-size: 48px;
+            margin-bottom: 15px;
+        }
+
+        .challenge-card h3 {
+            font-size: 18px;
+            margin-bottom: 10px;
+            color: #333;
+        }
+
+        .challenge-card p {
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 15px;
+        }
+
+        .challenge-card .difficulty {
+            display: inline-block;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .difficulty.easy {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .difficulty.medium {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .difficulty.hard {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        /* Stats Section */
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 30px;
+            margin: 40px 0;
+        }
+
+        .stat-card {
+            text-align: center;
+        }
+
+        .stat-number {
+            font-size: 48px;
+            font-weight: bold;
+            color: #667eea;
+            margin-bottom: 10px;
+        }
+
+        .stat-label {
+            font-size: 16px;
+            color: #666;
+        }
+
+        /* Features */
+        .features {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+            margin: 40px 0;
+        }
+
+        .feature {
+            padding: 20px;
+            background: #f9f9f9;
+            border-radius: 8px;
+            border-left: 4px solid #667eea;
+        }
+
+        .feature h3 {
+            font-size: 18px;
+            margin-bottom: 10px;
+            color: #333;
+        }
+
+        .feature p {
+            font-size: 14px;
+            color: #666;
+            line-height: 1.6;
+        }
+
+        /* Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 2000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+            animation: fadeIn 0.3s;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .modal-content {
+            background-color: white;
+            margin: 5% auto;
+            padding: 30px;
+            border-radius: 12px;
+            width: 90%;
+            max-width: 800px;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+        }
+
+        .close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: color 0.3s;
+        }
+
+        .close:hover {
+            color: #000;
+        }
+
+        /* Footer */
+        footer {
+            background: #333;
+            color: white;
+            padding: 40px 20px;
+            text-align: center;
+        }
+
+        footer .container {
+            margin-bottom: 20px;
+        }
+
+        footer p {
+            margin: 10px 0;
+            opacity: 0.8;
+        }
+
+        footer a {
+            color: #667eea;
+            text-decoration: none;
+        }
+
+        footer a:hover {
+            text-decoration: underline;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            nav ul {
+                gap: 15px;
+                flex-direction: column;
+            }
+
+            .hero h1 {
+                font-size: 32px;
+            }
+
+            .hero p {
+                font-size: 16px;
+            }
+
+            .cta-buttons {
+                flex-direction: column;
+            }
+
+            .btn {
+                width: 100%;
+            }
+
+            .challenge-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .stats {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Tabs */
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 30px;
+            border-bottom: 2px solid #e0e0e0;
+            flex-wrap: wrap;
+        }
+
+        .tab-btn {
+            padding: 12px 20px;
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 16px;
+            color: #666;
+            border-bottom: 3px solid transparent;
+            transition: all 0.3s;
+        }
+
+        .tab-btn.active {
+            color: #667eea;
+            border-bottom-color: #667eea;
+        }
+
+        .tab-btn:hover {
+            color: #667eea;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav>
+        <div class="container">
+            <div class="logo">
+                🔐 CAPTCHA Suite
+            </div>
+            <ul>
+                <li><a href="#home">Home</a></li>
+                <li><a href="#challenges">Challenges</a></li>
+                <li><a href="#features">Features</a></li>
+                <li><a href="#docs">Docs</a></li>
+                <li><a href="https://github.com/Call-dot/captcha" target="_blank">GitHub</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="hero" id="home">
+        <div class="container">
+            <h1>🔐 Comprehensive CAPTCHA Suite</h1>
+            <p>31+ interactive challenge types for robust bot protection</p>
+            <div class="cta-buttons">
+                <button class="btn btn-primary" onclick="scrollTo('challenges')">Get Started</button>
+                <a href="https://github.com/Call-dot/captcha" target="_blank" class="btn btn-secondary">View on GitHub</a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Stats Section -->
+    <section>
+        <div class="container">
+            <div class="stats">
+                <div class="stat-card">
+                    <div class="stat-number">31+</div>
+                    <div class="stat-label">Challenge Types</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number">4</div>
+                    <div class="stat-label">Difficulty Levels</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number">100%</div>
+                    <div class="stat-label">Open Source</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number">0</div>
+                    <div class="stat-label">Dependencies (HTML)</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Challenges Section -->
+    <section class="alt" id="challenges">
+        <div class="container">
+            <h2>🎮 Interactive Challenges</h2>
+            
+            <div class="tabs">
+                <button class="tab-btn active" onclick="switchTab('text')">Text Recognition</button>
+                <button class="tab-btn" onclick="switchTab('image')">Image Selection</button>
+                <button class="tab-btn" onclick="switchTab('all')">All Challenges</button>
+            </div>
+
+            <!-- Text Recognition Challenges -->
+            <div id="text" class="tab-content active">
+                <div class="challenge-grid">
+                    <div class="challenge-card" onclick="openChallenge('text-recognition-challenges.html')">
+                        <div class="icon">📝</div>
+                        <h3>Distorted Letters</h3>
+                        <p>Recognize warped alphabetic characters</p>
+                        <span class="difficulty medium">Medium</span>
+                    </div>
+                    <div class="challenge-card" onclick="openChallenge('text-recognition-challenges.html')">
+                        <div class="icon">🔢</div>
+                        <h3>Distorted Numbers</h3>
+                        <p>Identify warped numeric characters</p>
+                        <span class="difficulty medium">Medium</span>
+                    </div>
+                    <div class="challenge-card" onclick="openChallenge('text-recognition-challenges.html')">
+                        <div class="icon">🅰️</div>
+                        <h3>Mixed Alphanumeric</h3>
+                        <p>Letters and numbers combined</p>
+                        <span class="difficulty hard">Hard</span>
+                    </div>
+                    <div class="challenge-card" onclick="openChallenge('text-recognition-challenges.html')">
+                        <div class="icon">📖</div>
+                        <h3>Words from Image</h3>
+                        <p>Recognize single words</p>
+                        <span class="difficulty hard">Hard</span>
+                    </div>
+                    <div class="challenge-card" onclick="openChallenge('text-recognition-challenges.html')">
+                        <div class="icon">📚</div>
+                        <h3>Multiple Words</h3>
+                        <p>Identify 2+ words together</p>
+                        <span class="difficulty hard">Hard</span>
+                    </div>
+                    <div class="challenge-card" onclick="openChallenge('text-recognition-challenges.html')">
+                        <div class="icon">✍️</div>
+                        <h3>Handwritten Text</h3>
+                        <p>Cursive/script style text</p>
+                        <span class="difficulty hard">Hard</span>
+                    </div>
+                    <div class="challenge-card" onclick="openChallenge('text-recognition-challenges.html')">
+                        <div class="icon">🔄</div>
+                        <h3>Rotated Characters</h3>
+                        <p>Characters at various angles</p>
+                        <span class="difficulty hard">Hard</span>
+                    </div>
+                    <div class="challenge-card" onclick="openChallenge('text-recognition-challenges.html')">
+                        <div class="icon">📊</div>
+                        <h3>Background Noise</h3>
+                        <p>Text with visual noise overlay</p>
+                        <span class="difficulty medium">Medium</span>
+                    </div>
+                    <div class="challenge-card" onclick="openChallenge('text-recognition-challenges.html')">
+                        <div class="icon">🎨</div>
+                        <h3>Overlapping Letters</h3>
+                        <p>Letters blended together</p>
+                        <span class="difficulty hard">Hard</span>
+                    </div>
+                    <div class="challenge-card" onclick="openChallenge('text-recognition-challenges.html')">
+                        <div class="icon">🔤</div>
+                        <h3>Different Fonts</h3>
+                        <p>Each character in different style</p>
+                        <span class="difficulty hard">Hard</span>
+                    </div>
+                </div>
+                <div style="text-align: center; margin-top: 30px;">
+                    <button class="btn btn-primary" onclick="window.open('text-recognition-challenges.html', '_blank')">
+                        Try Text Recognition Challenges →
+                    </button>
+                </div>
+            </div>
+
+            <!-- Image Selection Challenges -->
+            <div id="image" class="tab-content">
+                <div class="challenge-grid">
+                    <div class="challenge-card">
+                        <div class="icon">🚲</div>
+                        <h3>Transportation</h3>
+                        <p>7 vehicle types: bicycles, buses, cars, motorcycles, trains, airplanes, taxis</p>
+                        <span class="difficulty medium">Medium</span>
+                    </div>
+                    <div class="challenge-card">
+                        <div class="icon">🏗️</div>
+                        <h3>Infrastructure</h3>
+                        <p>8 types: traffic lights, crosswalks, fire hydrants, bridges, chimneys, stairs, storefronts, parking meters</p>
+                        <span class="difficulty medium">Medium</span>
+                    </div>
+                    <div class="challenge-card">
+                        <div class="icon">🌲</div>
+                        <h3>Nature</h3>
+                        <p>3 types: mountains, trees, boats</p>
+                        <span class="difficulty easy">Easy</span>
+                    </div>
+                    <div class="challenge-card">
+                        <div class="icon">🐾</div>
+                        <h3>Animals</h3>
+                        <p>3 types: general animals, cats, dogs</p>
+                        <span class="difficulty medium">Medium</span>
+                    </div>
+                </div>
+                <div style="text-align: center; margin-top: 30px;">
+                    <button class="btn btn-primary" onclick="window.open('image-selection-challenges.html', '_blank')">
+                        Try Image Selection Challenges →
+                    </button>
+                </div>
+            </div>
+
+            <!-- All Challenges -->
+            <div id="all" class="tab-content">
+                <p style="text-align: center; font-size: 18px; margin-bottom: 30px;">
+                    <strong>Total: 31+ Challenge Types</strong>
+                </p>
+                <div class="challenge-grid">
+                    <div class="challenge-card">
+                        <div class="icon">📝</div>
+                        <h3>10 Text Recognition</h3>
+                        <p>Distorted letters, numbers, mixed, words, handwritten, rotated, noise, overlapping, fonts</p>
+                    </div>
+                    <div class="challenge-card">
+                        <div class="icon">🖼️</div>
+                        <h3>21 Image Selection</h3>
+                        <p>Transportation, infrastructure, nature, and animals (bicycles, buses, cars, motorcycles, and more)</p>
+                    </div>
+                </div>
+                <div style="text-align: center; margin-top: 30px;">
+                    <button class="btn btn-primary" onclick="window.open('text-recognition-challenges.html', '_blank')">
+                        Text Recognition
+                    </button>
+                    <button class="btn btn-primary" style="margin-left: 10px;" onclick="window.open('image-selection-challenges.html', '_blank')">
+                        Image Selection
+                    </button>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Features Section -->
+    <section id="features">
+        <div class="container">
+            <h2>✨ Key Features</h2>
+            <div class="features">
+                <div class="feature">
+                    <h3>🎨 Beautiful UI</h3>
+                    <p>Modern gradient design with smooth animations and responsive layout. Works perfectly on desktop, tablet, and mobile devices.</p>
+                </div>
+                <div class="feature">
+                    <h3>⚡ No Dependencies</h3>
+                    <p>Pure HTML/CSS/JavaScript. No external libraries needed for web versions. Lightweight and fast.</p>
+                </div>
+                <div class="feature">
+                    <h3>🔒 Secure</h3>
+                    <p>Implements rate limiting, session management, expiration timers, and random generation for robust security.</p>
+                </div>
+                <div class="feature">
+                    <h3>♿ Accessible</h3>
+                    <p>Keyboard navigation, screen reader support, high contrast modes, and audio alternatives for better accessibility.</p>
+                </div>
+                <div class="feature">
+                    <h3>📱 Responsive</h3>
+                    <p>Fully responsive design that adapts to any screen size. Mobile-first approach with beautiful layout on all devices.</p>
+                </div>
+                <div class="feature">
+                    <h3>🔧 Easy Integration</h3>
+                    <p>Simple to integrate into any web application. Available as standalone HTML or with Node.js/Python backends.</p>
+                </div>
+                <div class="feature">
+                    <h3>🎯 Multiple Difficulties</h3>
+                    <p>Easy, Medium, Hard, and Very Hard levels. Scale complexity based on your security requirements.</p>
+                </div>
+                <div class="feature">
+                    <h3>📊 Real-time Feedback</h3>
+                    <p>Instant verification with success/error messages. Users know immediately if they passed or failed.</p>
+                </div>
+                <div class="feature">
+                    <h3>🌙 Dark Mode</h3>
+                    <p>Compatible with system dark mode preferences. Automatic theme detection and switching.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Documentation Section -->
+    <section class="alt" id="docs">
+        <div class="container">
+            <h2>📚 Quick Start</h2>
+            
+            <h3 style="margin-top: 30px; margin-bottom: 15px;">1. Using HTML Files Directly</h3>
+            <p style="margin-bottom: 15px;">No setup required! Just open the HTML files in your browser:</p>
+            <pre style="background: #f5f5f5; padding: 15px; border-radius: 8px; overflow-x: auto; margin-bottom: 30px;"><code>text-recognition-challenges.html
+image-selection-challenges.html</code></pre>
+
+            <h3 style="margin-top: 30px; margin-bottom: 15px;">2. Backend Integration (Node.js)</h3>
+            <pre style="background: #f5f5f5; padding: 15px; border-radius: 8px; overflow-x: auto; margin-bottom: 30px;"><code>npm install
+npm start
+# Server runs on http://localhost:3000</code></pre>
+
+            <h3 style="margin-top: 30px; margin-bottom: 15px;">3. Backend Integration (Python)</h3>
+            <pre style="background: #f5f5f5; padding: 15px; border-radius: 8px; overflow-x: auto; margin-bottom: 30px;"><code>pip install -r requirements.txt
+python captcha_service.py
+# Server runs on http://localhost:5000</code></pre>
+
+            <h3 style="margin-top: 30px; margin-bottom: 15px;">Difficulty Levels</h3>
+            <ul style="list-style: none; margin-bottom: 30px;">
+                <li style="padding: 8px 0;">🟢 <strong>Easy</strong> - Simple, obvious challenges (low-security forms)</li>
+                <li style="padding: 8px 0;">🟡 <strong>Medium</strong> - Moderate difficulty (standard form protection)</li>
+                <li style="padding: 8px 0;">🔴 <strong>Hard</strong> - Complex challenges (high-security forms)</li>
+                <li style="padding: 8px 0;">⚫ <strong>Very Hard</strong> - Extremely challenging (critical operations)</li>
+            </ul>
+
+            <h3 style="margin-top: 30px; margin-bottom: 15px;">Repository Structure</h3>
+            <pre style="background: #f5f5f5; padding: 15px; border-radius: 8px; overflow-x: auto;"><code>captcha/
+├── README.md
+├── index.html (this file)
+├── text-recognition-challenges.html
+├── image-selection-challenges.html
+├── package.json
+├── requirements.txt
+├── captcha-service.js
+└── captcha_service.py</code></pre>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer>
+        <div class="container">
+            <h3>🔐 CAPTCHA Suite</h3>
+            <p>Comprehensive CAPTCHA implementations for robust bot protection</p>
+            <p><a href="https://github.com/Call-dot/captcha" target="_blank">GitHub Repository</a> | MIT License</p>
+            <p style="margin-top: 20px; opacity: 0.6;">Made with ❤️ by Call-dot | 2026</p>
+        </div>
+    </footer>
+
+    <script>
+        function switchTab(tabName) {
+            // Hide all tabs
+            const contents = document.querySelectorAll('.tab-content');
+            contents.forEach(content => content.classList.remove('active'));
+
+            // Remove active class from buttons
+            const buttons = document.querySelectorAll('.tab-btn');
+            buttons.forEach(btn => btn.classList.remove('active'));
+
+            // Show selected tab
+            document.getElementById(tabName).classList.add('active');
+
+            // Add active class to clicked button
+            event.target.classList.add('active');
+        }
+
+        function openChallenge(file) {
+            window.open(file, '_blank');
+        }
+
+        function scrollTo(sectionId) {
+            const element = document.getElementById(sectionId);
+            element.scrollIntoView({ behavior: 'smooth' });
+        }
+
+        // Smooth scroll for anchor links
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                const href = this.getAttribute('href');
+                if (href !== '#') {
+                    e.preventDefault();
+                    const element = document.querySelector(href);
+                    if (element) {
+                        element.scrollIntoView({ behavior: 'smooth' });
+                    }
+                }
+            });
+        });
+    </script>
+</body>
+</html>
