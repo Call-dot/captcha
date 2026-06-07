@@ -1,0 +1,663 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Image Selection Challenges - CAPTCHA</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 700px;
+            margin: 0 auto;
+        }
+
+        .challenge-selector {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            margin-bottom: 20px;
+        }
+
+        .challenge-selector h1 {
+            color: #333;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .challenge-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 10px;
+        }
+
+        .challenge-btn {
+            padding: 12px;
+            border: 2px solid #ddd;
+            background: white;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 500;
+            transition: all 0.3s;
+            color: #333;
+        }
+
+        .challenge-btn:hover {
+            border-color: #667eea;
+            background: #f0f2ff;
+            transform: translateY(-2px);
+        }
+
+        .challenge-btn.active {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
+        }
+
+        .challenge-container {
+            background: white;
+            padding: 40px;
+            border-radius: 12px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            display: none;
+        }
+
+        .challenge-container.active {
+            display: block;
+        }
+
+        .challenge-container h2 {
+            color: #333;
+            margin-bottom: 10px;
+            text-align: center;
+        }
+
+        .difficulty-info {
+            background: #f0f2ff;
+            padding: 10px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+            font-size: 14px;
+            color: #555;
+            text-align: center;
+        }
+
+        .instruction {
+            background: #e3f2fd;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            border-left: 4px solid #2196F3;
+        }
+
+        .instruction h3 {
+            color: #1976d2;
+            margin-bottom: 5px;
+        }
+
+        .instruction p {
+            color: #555;
+            font-size: 14px;
+        }
+
+        .image-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin-bottom: 25px;
+            background: #f9f9f9;
+            padding: 20px;
+            border-radius: 8px;
+        }
+
+        .image-tile {
+            position: relative;
+            cursor: pointer;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            transition: all 0.3s;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            aspect-ratio: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 50px;
+            color: white;
+            font-weight: bold;
+        }
+
+        .image-tile:hover {
+            transform: scale(1.05);
+            box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+        }
+
+        .image-tile.selected {
+            border: 3px solid #4CAF50;
+            background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
+        }
+
+        .selection-counter {
+            text-align: center;
+            margin-bottom: 20px;
+            font-size: 16px;
+            color: #666;
+            font-weight: 600;
+        }
+
+        .selection-counter.valid {
+            color: #4CAF50;
+        }
+
+        .selection-counter.invalid {
+            color: #f44336;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 10px;
+        }
+
+        button {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            border-radius: 6px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .btn-primary {
+            background: #667eea;
+            color: white;
+        }
+
+        .btn-primary:hover:not(:disabled) {
+            background: #5568d3;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-secondary {
+            background: #e0e0e0;
+            color: #333;
+        }
+
+        .btn-secondary:hover {
+            background: #d0d0d0;
+        }
+
+        button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .message {
+            margin-top: 15px;
+            padding: 12px;
+            border-radius: 6px;
+            text-align: center;
+            font-weight: 600;
+            animation: slideIn 0.3s ease;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .message.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .message.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .message.info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="challenge-selector">
+            <h1>🖼️ Image Selection Challenges</h1>
+            <div class="challenge-grid">
+                <button class="challenge-btn active" onclick="switchChallenge('bicycles')">Bicycles</button>
+                <button class="challenge-btn" onclick="switchChallenge('buses')">Buses</button>
+                <button class="challenge-btn" onclick="switchChallenge('cars')">Cars</button>
+                <button class="challenge-btn" onclick="switchChallenge('motorcycles')">Motorcycles</button>
+                <button class="challenge-btn" onclick="switchChallenge('traffic-lights')">Traffic Lights</button>
+                <button class="challenge-btn" onclick="switchChallenge('crosswalks')">Crosswalks</button>
+                <button class="challenge-btn" onclick="switchChallenge('fire-hydrants')">Fire Hydrants</button>
+                <button class="challenge-btn" onclick="switchChallenge('boats')">Boats</button>
+                <button class="challenge-btn" onclick="switchChallenge('bridges')">Bridges</button>
+                <button class="challenge-btn" onclick="switchChallenge('chimneys')">Chimneys</button>
+                <button class="challenge-btn" onclick="switchChallenge('stairs')">Stairs</button>
+                <button class="challenge-btn" onclick="switchChallenge('storefronts')">Storefronts</button>
+                <button class="challenge-btn" onclick="switchChallenge('mountains')">Mountains</button>
+                <button class="challenge-btn" onclick="switchChallenge('trees')">Trees</button>
+                <button class="challenge-btn" onclick="switchChallenge('animals')">Animals</button>
+                <button class="challenge-btn" onclick="switchChallenge('cats')">Cats</button>
+                <button class="challenge-btn" onclick="switchChallenge('dogs')">Dogs</button>
+                <button class="challenge-btn" onclick="switchChallenge('airplanes')">Airplanes</button>
+                <button class="challenge-btn" onclick="switchChallenge('trains')">Trains</button>
+                <button class="challenge-btn" onclick="switchChallenge('taxis')">Taxis</button>
+                <button class="challenge-btn" onclick="switchChallenge('parking-meters')">Parking Meters</button>
+            </div>
+        </div>
+
+        <div class="challenge-container" id="bicycles">
+            <h2>Select all bicycles</h2>
+            <div class="difficulty-info">🔸 Difficulty: Medium</div>
+            <div class="instruction">
+                <h3>Instructions:</h3>
+                <p>Click on all images that contain bicycles.</p>
+            </div>
+            <div class="selection-counter" id="counter-bicycles">Selected: 0</div>
+            <div class="image-grid" id="grid-bicycles"></div>
+            <div class="button-group">
+                <button class="btn-secondary" onclick="generateChallenge('bicycles')">🔄 Refresh</button>
+                <button class="btn-primary" onclick="verifyChallenge('bicycles')">Verify Selection</button>
+            </div>
+            <div id="message-bicycles"></div>
+        </div>
+
+        <div class="challenge-container" id="buses">
+            <h2>Select all buses</h2>
+            <div class="difficulty-info">🔸 Difficulty: Medium</div>
+            <div class="instruction"><h3>Instructions:</h3><p>Click on all images that contain buses.</p></div>
+            <div class="selection-counter" id="counter-buses">Selected: 0</div>
+            <div class="image-grid" id="grid-buses"></div>
+            <div class="button-group">
+                <button class="btn-secondary" onclick="generateChallenge('buses')">🔄 Refresh</button>
+                <button class="btn-primary" onclick="verifyChallenge('buses')">Verify Selection</button>
+            </div>
+            <div id="message-buses"></div>
+        </div>
+
+        <div class="challenge-container" id="cars">
+            <h2>Select all cars</h2>
+            <div class="difficulty-info">🔸 Difficulty: Medium</div>
+            <div class="instruction"><h3>Instructions:</h3><p>Click on all images that contain cars.</p></div>
+            <div class="selection-counter" id="counter-cars">Selected: 0</div>
+            <div class="image-grid" id="grid-cars"></div>
+            <div class="button-group">
+                <button class="btn-secondary" onclick="generateChallenge('cars')">🔄 Refresh</button>
+                <button class="btn-primary" onclick="verifyChallenge('cars')">Verify Selection</button>
+            </div>
+            <div id="message-cars"></div>
+        </div>
+
+        <div class="challenge-container" id="motorcycles">
+            <h2>Select all motorcycles</h2>
+            <div class="difficulty-info">🟡 Difficulty: Hard</div>
+            <div class="instruction"><h3>Instructions:</h3><p>Click on all images that contain motorcycles.</p></div>
+            <div class="selection-counter" id="counter-motorcycles">Selected: 0</div>
+            <div class="image-grid" id="grid-motorcycles"></div>
+            <div class="button-group">
+                <button class="btn-secondary" onclick="generateChallenge('motorcycles')">🔄 Refresh</button>
+                <button class="btn-primary" onclick="verifyChallenge('motorcycles')">Verify Selection</button>
+            </div>
+            <div id="message-motorcycles"></div>
+        </div>
+
+        <div class="challenge-container" id="traffic-lights">
+            <h2>Select all traffic lights</h2>
+            <div class="difficulty-info">🟡 Difficulty: Hard</div>
+            <div class="instruction"><h3>Instructions:</h3><p>Click on all images that contain traffic lights.</p></div>
+            <div class="selection-counter" id="counter-traffic-lights">Selected: 0</div>
+            <div class="image-grid" id="grid-traffic-lights"></div>
+            <div class="button-group">
+                <button class="btn-secondary" onclick="generateChallenge('traffic-lights')">🔄 Refresh</button>
+                <button class="btn-primary" onclick="verifyChallenge('traffic-lights')">Verify Selection</button>
+            </div>
+            <div id="message-traffic-lights"></div>
+        </div>
+
+        <div class="challenge-container" id="crosswalks">
+            <h2>Select all crosswalks</h2>
+            <div class="difficulty-info">🟡 Difficulty: Hard</div>
+            <div class="instruction"><h3>Instructions:</h3><p>Click on all images that contain crosswalks.</p></div>
+            <div class="selection-counter" id="counter-crosswalks">Selected: 0</div>
+            <div class="image-grid" id="grid-crosswalks"></div>
+            <div class="button-group">
+                <button class="btn-secondary" onclick="generateChallenge('crosswalks')">🔄 Refresh</button>
+                <button class="btn-primary" onclick="verifyChallenge('crosswalks')">Verify Selection</button>
+            </div>
+            <div id="message-crosswalks"></div>
+        </div>
+
+        <div class="challenge-container" id="fire-hydrants">
+            <h2>Select all fire hydrants</h2>
+            <div class="difficulty-info">🔴 Difficulty: Very Hard</div>
+            <div class="instruction"><h3>Instructions:</h3><p>Click on all images that contain fire hydrants.</p></div>
+            <div class="selection-counter" id="counter-fire-hydrants">Selected: 0</div>
+            <div class="image-grid" id="grid-fire-hydrants"></div>
+            <div class="button-group">
+                <button class="btn-secondary" onclick="generateChallenge('fire-hydrants')">🔄 Refresh</button>
+                <button class="btn-primary" onclick="verifyChallenge('fire-hydrants')">Verify Selection</button>
+            </div>
+            <div id="message-fire-hydrants"></div>
+        </div>
+
+        <div class="challenge-container" id="boats">
+            <h2>Select all boats</h2>
+            <div class="difficulty-info">🔸 Difficulty: Medium</div>
+            <div class="instruction"><h3>Instructions:</h3><p>Click on all images that contain boats.</p></div>
+            <div class="selection-counter" id="counter-boats">Selected: 0</div>
+            <div class="image-grid" id="grid-boats"></div>
+            <div class="button-group">
+                <button class="btn-secondary" onclick="generateChallenge('boats')">🔄 Refresh</button>
+                <button class="btn-primary" onclick="verifyChallenge('boats')">Verify Selection</button>
+            </div>
+            <div id="message-boats"></div>
+        </div>
+
+        <div class="challenge-container" id="bridges">
+            <h2>Select all bridges</h2>
+            <div class="difficulty-info">🔸 Difficulty: Medium</div>
+            <div class="instruction"><h3>Instructions:</h3><p>Click on all images that contain bridges.</p></div>
+            <div class="selection-counter" id="counter-bridges">Selected: 0</div>
+            <div class="image-grid" id="grid-bridges"></div>
+            <div class="button-group">
+                <button class="btn-secondary" onclick="generateChallenge('bridges')">🔄 Refresh</button>
+                <button class="btn-primary" onclick="verifyChallenge('bridges')">Verify Selection</button>
+            </div>
+            <div id="message-bridges"></div>
+        </div>
+
+        <div class="challenge-container" id="chimneys">
+            <h2>Select all chimneys</h2>
+            <div class="difficulty-info">🟡 Difficulty: Hard</div>
+            <div class="instruction"><h3>Instructions:</h3><p>Click on all images that contain chimneys.</p></div>
+            <div class="selection-counter" id="counter-chimneys">Selected: 0</div>
+            <div class="image-grid" id="grid-chimneys"></div>
+            <div class="button-group">
+                <button class="btn-secondary" onclick="generateChallenge('chimneys')">🔄 Refresh</button>
+                <button class="btn-primary" onclick="verifyChallenge('chimneys')">Verify Selection</button>
+            </div>
+            <div id="message-chimneys"></div>
+        </div>
+
+        <div class="challenge-container" id="stairs">
+            <h2>Select all stairs</h2>
+            <div class="difficulty-info">🔸 Difficulty: Medium</div>
+            <div class="instruction"><h3>Instructions:</h3><p>Click on all images that contain stairs.</p></div>
+            <div class="selection-counter" id="counter-stairs">Selected: 0</div>
+            <div class="image-grid" id="grid-stairs"></div>
+            <div class="button-group">
+                <button class="btn-secondary" onclick="generateChallenge('stairs')">🔄 Refresh</button>
+                <button class="btn-primary" onclick="verifyChallenge('stairs')">Verify Selection</button>
+            </div>
+            <div id="message-stairs"></div>
+        </div>
+
+        <div class="challenge-container" id="storefronts">
+            <h2>Select all storefronts</h2>
+            <div class="difficulty-info">🟡 Difficulty: Hard</div>
+            <div class="instruction"><h3>Instructions:</h3><p>Click on all images that contain storefronts.</p></div>
+            <div class="selection-counter" id="counter-storefronts">Selected: 0</div>
+            <div class="image-grid" id="grid-storefronts"></div>
+            <div class="button-group">
+                <button class="btn-secondary" onclick="generateChallenge('storefronts')">🔄 Refresh</button>
+                <button class="btn-primary" onclick="verifyChallenge('storefronts')">Verify Selection</button>
+            </div>
+            <div id="message-storefronts"></div>
+        </div>
+
+        <div class="challenge-container" id="mountains">
+            <h2>Select all mountains</h2>
+            <div class="difficulty-info">🔸 Difficulty: Medium</div>
+            <div class="instruction"><h3>Instructions:</h3><p>Click on all images that contain mountains.</p></div>
+            <div class="selection-counter" id="counter-mountains">Selected: 0</div>
+            <div class="image-grid" id="grid-mountains"></div>
+            <div class="button-group">
+                <button class="btn-secondary" onclick="generateChallenge('mountains')">🔄 Refresh</button>
+                <button class="btn-primary" onclick="verifyChallenge('mountains')">Verify Selection</button>
+            </div>
+            <div id="message-mountains"></div>
+        </div>
+
+        <div class="challenge-container" id="trees">
+            <h2>Select all trees</h2>
+            <div class="difficulty-info">🔸 Difficulty: Medium</div>
+            <div class="instruction"><h3>Instructions:</h3><p>Click on all images that contain trees.</p></div>
+            <div class="selection-counter" id="counter-trees">Selected: 0</div>
+            <div class="image-grid" id="grid-trees"></div>
+            <div class="button-group">
+                <button class="btn-secondary" onclick="generateChallenge('trees')">🔄 Refresh</button>
+                <button class="btn-primary" onclick="verifyChallenge('trees')">Verify Selection</button>
+            </div>
+            <div id="message-trees"></div>
+        </div>
+
+        <div class="challenge-container" id="animals">
+            <h2>Select all animals</h2>
+            <div class="difficulty-info">🔸 Difficulty: Medium</div>
+            <div class="instruction"><h3>Instructions:</h3><p>Click on all images that contain animals.</p></div>
+            <div class="selection-counter" id="counter-animals">Selected: 0</div>
+            <div class="image-grid" id="grid-animals"></div>
+            <div class="button-group">
+                <button class="btn-secondary" onclick="generateChallenge('animals')">🔄 Refresh</button>
+                <button class="btn-primary" onclick="verifyChallenge('animals')">Verify Selection</button>
+            </div>
+            <div id="message-animals"></div>
+        </div>
+
+        <div class="challenge-container" id="cats">
+            <h2>Select all cats</h2>
+            <div class="difficulty-info">🔸 Difficulty: Medium</div>
+            <div class="instruction"><h3>Instructions:</h3><p>Click on all images that contain cats.</p></div>
+            <div class="selection-counter" id="counter-cats">Selected: 0</div>
+            <div class="image-grid" id="grid-cats"></div>
+            <div class="button-group">
+                <button class="btn-secondary" onclick="generateChallenge('cats')">🔄 Refresh</button>
+                <button class="btn-primary" onclick="verifyChallenge('cats')">Verify Selection</button>
+            </div>
+            <div id="message-cats"></div>
+        </div>
+
+        <div class="challenge-container" id="dogs">
+            <h2>Select all dogs</h2>
+            <div class="difficulty-info">🔸 Difficulty: Medium</div>
+            <div class="instruction"><h3>Instructions:</h3><p>Click on all images that contain dogs.</p></div>
+            <div class="selection-counter" id="counter-dogs">Selected: 0</div>
+            <div class="image-grid" id="grid-dogs"></div>
+            <div class="button-group">
+                <button class="btn-secondary" onclick="generateChallenge('dogs')">🔄 Refresh</button>
+                <button class="btn-primary" onclick="verifyChallenge('dogs')">Verify Selection</button>
+            </div>
+            <div id="message-dogs"></div>
+        </div>
+
+        <div class="challenge-container" id="airplanes">
+            <h2>Select all airplanes</h2>
+            <div class="difficulty-info">🔸 Difficulty: Medium</div>
+            <div class="instruction"><h3>Instructions:</h3><p>Click on all images that contain airplanes.</p></div>
+            <div class="selection-counter" id="counter-airplanes">Selected: 0</div>
+            <div class="image-grid" id="grid-airplanes"></div>
+            <div class="button-group">
+                <button class="btn-secondary" onclick="generateChallenge('airplanes')">🔄 Refresh</button>
+                <button class="btn-primary" onclick="verifyChallenge('airplanes')">Verify Selection</button>
+            </div>
+            <div id="message-airplanes"></div>
+        </div>
+
+        <div class="challenge-container" id="trains">
+            <h2>Select all trains</h2>
+            <div class="difficulty-info">🔸 Difficulty: Medium</div>
+            <div class="instruction"><h3>Instructions:</h3><p>Click on all images that contain trains.</p></div>
+            <div class="selection-counter" id="counter-trains">Selected: 0</div>
+            <div class="image-grid" id="grid-trains"></div>
+            <div class="button-group">
+                <button class="btn-secondary" onclick="generateChallenge('trains')">🔄 Refresh</button>
+                <button class="btn-primary" onclick="verifyChallenge('trains')">Verify Selection</button>
+            </div>
+            <div id="message-trains"></div>
+        </div>
+
+        <div class="challenge-container" id="taxis">
+            <h2>Select all taxis</h2>
+            <div class="difficulty-info">🟡 Difficulty: Hard</div>
+            <div class="instruction"><h3>Instructions:</h3><p>Click on all images that contain taxis.</p></div>
+            <div class="selection-counter" id="counter-taxis">Selected: 0</div>
+            <div class="image-grid" id="grid-taxis"></div>
+            <div class="button-group">
+                <button class="btn-secondary" onclick="generateChallenge('taxis')">🔄 Refresh</button>
+                <button class="btn-primary" onclick="verifyChallenge('taxis')">Verify Selection</button>
+            </div>
+            <div id="message-taxis"></div>
+        </div>
+
+        <div class="challenge-container" id="parking-meters">
+            <h2>Select all parking meters</h2>
+            <div class="difficulty-info">🔴 Difficulty: Very Hard</div>
+            <div class="instruction"><h3>Instructions:</h3><p>Click on all images that contain parking meters.</p></div>
+            <div class="selection-counter" id="counter-parking-meters">Selected: 0</div>
+            <div class="image-grid" id="grid-parking-meters"></div>
+            <div class="button-group">
+                <button class="btn-secondary" onclick="generateChallenge('parking-meters')">🔄 Refresh</button>
+                <button class="btn-primary" onclick="verifyChallenge('parking-meters')">Verify Selection</button>
+            </div>
+            <div id="message-parking-meters"></div>
+        </div>
+    </div>
+
+    <script>
+        const emojis = {
+            'bicycles': { target: '🚲', others: ['🏎️', '🚗', '🚌', '🚕', '🚙', '🏍️', '⛵', '🚂'] },
+            'buses': { target: '🚌', others: ['🚗', '🚲', '🚕', '🏎️', '🚙', '🏍️', '⛵', '🚂'] },
+            'cars': { target: '🚗', others: ['🚲', '🚌', '🚕', '🏎️', '🚙', '🏍️', '⛵', '🚂'] },
+            'motorcycles': { target: '🏍️', others: ['🚗', '🚲', '🚌', '🚕', '🏎️', '🚙', '⛵', '🚂'] },
+            'traffic-lights': { target: '🚦', others: ['🚧', '⛔', '🚨', '🚷', '⚠️', '🛑', '🛣️', '🚏'] },
+            'crosswalks': { target: '🚦', others: ['🚧', '⛔', '🚨', '🛑', '⚠️', '🛣️', '🚏', '🚷'] },
+            'fire-hydrants': { target: '🔴', others: ['🔵', '🟡', '🟢', '🟣', '🟠', '⚫', '⚪', '🟤'] },
+            'boats': { target: '⛵', others: ['🚗', '🚲', '🚌', '🏎️', '🚕', '🏍️', '🚂', '✈️'] },
+            'bridges': { target: '🌉', others: ['🏰', '🏛️', '🗼', '🏢', '🏭', '🏗️', '🏘️', '🏙️'] },
+            'chimneys': { target: '🏭', others: ['🏢', '🏛️', '🗼', '🏰', '🏗️', '🏘️', '🏙️', '🌉'] },
+            'stairs': { target: '🪜', others: ['🚪', '🪟', '🛏️', '🛋️', '🪑', '🚽', '🛁', '🚿'] },
+            'storefronts': { target: '🏬', others: ['🏪', '🏢', '🏛️', '🏰', '🗼', '🏭', '🏗️', '🏘️'] },
+            'mountains': { target: '⛰️', others: ['🏔️', '🌋', '🗻', '⛳', '🏞️', '🌲', '🌳', '🌴'] },
+            'trees': { target: '🌲', others: ['🌳', '🌴', '🌵', '🌾', '🌿', '🍀', '🍃', '🍂'] },
+            'animals': { target: '🦁', others: ['🐯', '🐻', '🦊', '🐮', '🐷', '🐸', '🐵', '🦜'] },
+            'cats': { target: '🐱', others: ['🐶', '🐭', '🐹', '🐰', '🦊', '🐻', '🐼', '🐨'] },
+            'dogs': { target: '🐶', others: ['🐱', '🐭', '🐹', '🐰', '🦊', '🐻', '🐼', '🐨'] },
+            'airplanes': { target: '✈️', others: ['🚁', '🚂', '🚃', '🚄', '🚅', '🚆', '🚇', '🚈'] },
+            'trains': { target: '🚂', others: ['✈️', '🚁', '🚃', '🚄', '🚅', '🚆', '🚇', '🚈'] },
+            'taxis': { target: '🚕', others: ['🚗', '🚙', '🚌', '🚎', '🏎️', '🚓', '🚑', '🚒'] },
+            'parking-meters': { target: '🅿️', others: ['🚫', '🚷', '🚯', '⛔', '🚨', '🚧', '⚠️', '🛑'] }
+        };
+
+        let currentChallenges = {};
+
+        function switchChallenge(type) {
+            document.querySelectorAll('.challenge-btn').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+            document.querySelectorAll('.challenge-container').forEach(container => container.classList.remove('active'));
+            document.getElementById(type).classList.add('active');
+            if (!currentChallenges[type]) generateChallenge(type);
+        }
+
+        function generateChallenge(type) {
+            const config = emojis[type];
+            const grid = document.getElementById(`grid-${type}`);
+            grid.innerHTML = '';
+            const tiles = [];
+            const targetCount = Math.floor(Math.random() * 2) + 2;
+            const otherCount = 9 - targetCount;
+            for (let i = 0; i < targetCount; i++) tiles.push({ emoji: config.target, isTarget: true });
+            for (let i = 0; i < otherCount; i++) tiles.push({ emoji: config.others[Math.floor(Math.random() * config.others.length)], isTarget: false });
+            tiles.sort(() => Math.random() - 0.5);
+            tiles.forEach((tile, index) => {
+                const tile_el = document.createElement('div');
+                tile_el.className = 'image-tile';
+                tile_el.textContent = tile.emoji;
+                tile_el.dataset.index = index;
+                tile_el.dataset.isTarget = tile.isTarget;
+                tile_el.onclick = () => toggleTile(tile_el, type);
+                grid.appendChild(tile_el);
+            });
+            currentChallenges[type] = { tiles: tiles, selected: new Set() };
+            updateCounter(type);
+            document.getElementById(`message-${type}`).innerHTML = '';
+        }
+
+        function toggleTile(element, type) {
+            const index = parseInt(element.dataset.index);
+            const challenge = currentChallenges[type];
+            if (challenge.selected.has(index)) {
+                challenge.selected.delete(index);
+                element.classList.remove('selected');
+            } else {
+                challenge.selected.add(index);
+                element.classList.add('selected');
+            }
+            updateCounter(type);
+        }
+
+        function updateCounter(type) {
+            const challenge = currentChallenges[type];
+            const counter = document.getElementById(`counter-${type}`);
+            const count = challenge.selected.size;
+            counter.textContent = `Selected: ${count}`;
+            counter.className = 'selection-counter';
+        }
+
+        function verifyChallenge(type) {
+            const challenge = currentChallenges[type];
+            const messageDiv = document.getElementById(`message-${type}`);
+            let correctCount = 0, incorrectCount = 0;
+            challenge.tiles.forEach((tile, index) => {
+                const isSelected = challenge.selected.has(index);
+                if (tile.isTarget && isSelected) correctCount++;
+                else if (!tile.isTarget && isSelected) incorrectCount++;
+            });
+            const totalTargets = challenge.tiles.filter(t => t.isTarget).length;
+            const allCorrect = correctCount === totalTargets && incorrectCount === 0;
+            if (allCorrect) {
+                messageDiv.className = 'message success';
+                messageDiv.textContent = `✓ Perfect! You found all ${totalTargets} items.`;
+            } else if (correctCount > 0) {
+                messageDiv.className = 'message info';
+                messageDiv.textContent = `Found ${correctCount}/${totalTargets}. Try again!`;
+                setTimeout(() => generateChallenge(type), 2000);
+            } else {
+                messageDiv.className = 'message error';
+                messageDiv.textContent = `✗ Please select the target images.`;
+                setTimeout(() => generateChallenge(type), 2000);
+            }
+        }
+
+        generateChallenge('bicycles');
+    </script>
+</body>
+</html>

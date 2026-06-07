@@ -1,0 +1,649 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Text Recognition Challenges - CAPTCHA</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .challenge-selector {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            margin-bottom: 20px;
+        }
+
+        .challenge-selector h1 {
+            color: #333;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .challenge-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+
+        .challenge-btn {
+            padding: 12px;
+            border: 2px solid #ddd;
+            background: white;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.3s;
+            color: #333;
+        }
+
+        .challenge-btn:hover {
+            border-color: #667eea;
+            background: #f0f2ff;
+            transform: translateY(-2px);
+        }
+
+        .challenge-btn.active {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
+        }
+
+        .challenge-container {
+            background: white;
+            padding: 40px;
+            border-radius: 12px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            display: none;
+        }
+
+        .challenge-container.active {
+            display: block;
+        }
+
+        .challenge-container h2 {
+            color: #333;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .canvas-container {
+            background: #f9f9f9;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+            text-align: center;
+            min-height: 200px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        canvas {
+            max-width: 100%;
+            height: auto;
+            border-radius: 4px;
+        }
+
+        .input-group {
+            margin-bottom: 15px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #333;
+            font-weight: 500;
+        }
+
+        input[type="text"] {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 6px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+
+        input[type="text"]:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .button-group {
+            display: flex;
+            gap: 10px;
+        }
+
+        button {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            border-radius: 6px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .btn-primary {
+            background: #667eea;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #5568d3;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-secondary {
+            background: #e0e0e0;
+            color: #333;
+        }
+
+        .btn-secondary:hover {
+            background: #d0d0d0;
+        }
+
+        .message {
+            margin-top: 15px;
+            padding: 12px;
+            border-radius: 6px;
+            text-align: center;
+            font-weight: 600;
+            animation: slideIn 0.3s ease;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .message.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .message.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .hint {
+            font-size: 12px;
+            color: #666;
+            margin-top: 8px;
+            font-style: italic;
+        }
+
+        .difficulty-info {
+            background: #f0f2ff;
+            padding: 10px;
+            border-radius: 6px;
+            margin-bottom: 15px;
+            font-size: 14px;
+            color: #555;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="challenge-selector">
+            <h1>🔐 Text Recognition Challenges</h1>
+            <div class="challenge-grid">
+                <button class="challenge-btn active" onclick="switchChallenge('distorted-letters')">Distorted Letters</button>
+                <button class="challenge-btn" onclick="switchChallenge('distorted-numbers')">Distorted Numbers</button>
+                <button class="challenge-btn" onclick="switchChallenge('mixed-alphanumeric')">Mixed Letters & Numbers</button>
+                <button class="challenge-btn" onclick="switchChallenge('words-image')">Words from Image</button>
+                <button class="challenge-btn" onclick="switchChallenge('multiple-words')">Multiple Words</button>
+                <button class="challenge-btn" onclick="switchChallenge('handwritten')">Handwritten Text</button>
+                <button class="challenge-btn" onclick="switchChallenge('rotated')">Rotated Characters</button>
+                <button class="challenge-btn" onclick="switchChallenge('background-noise')">Background Noise</button>
+                <button class="challenge-btn" onclick="switchChallenge('overlapping')">Overlapping Letters</button>
+                <button class="challenge-btn" onclick="switchChallenge('different-fonts')">Different Fonts</button>
+            </div>
+        </div>
+
+        <div class="challenge-container" id="distorted-letters">
+            <h2>Distorted Letters Challenge</h2>
+            <div class="difficulty-info">🔸 Difficulty: Medium | Recognizing distorted letter characters</div>
+            <div class="canvas-container"><canvas id="canvas-distorted-letters" width="300" height="120"></canvas></div>
+            <div class="input-group">
+                <label for="input-distorted-letters">Enter the letters you see:</label>
+                <input type="text" id="input-distorted-letters" placeholder="e.g., ABC" autocomplete="off">
+                <div class="hint">Type exactly what you see, case-sensitive</div>
+            </div>
+            <div class="button-group">
+                <button class="btn-secondary" onclick="generateChallenge('distorted-letters')">🔄 Refresh</button>
+                <button class="btn-primary" onclick="verifyChallenge('distorted-letters')">Verify</button>
+            </div>
+            <div id="message-distorted-letters"></div>
+        </div>
+
+        <div class="challenge-container" id="distorted-numbers">
+            <h2>Distorted Numbers Challenge</h2>
+            <div class="difficulty-info">🔸 Difficulty: Medium | Recognizing distorted numeric characters</div>
+            <div class="canvas-container"><canvas id="canvas-distorted-numbers" width="300" height="120"></canvas></div>
+            <div class="input-group">
+                <label for="input-distorted-numbers">Enter the numbers you see:</label>
+                <input type="text" id="input-distorted-numbers" placeholder="e.g., 12345" autocomplete="off">
+                <div class="hint">Numbers only, 0-9</div>
+            </div>
+            <div class="button-group">
+                <button class="btn-secondary" onclick="generateChallenge('distorted-numbers')">🔄 Refresh</button>
+                <button class="btn-primary" onclick="verifyChallenge('distorted-numbers')">Verify</button>
+            </div>
+            <div id="message-distorted-numbers"></div>
+        </div>
+
+        <div class="challenge-container" id="mixed-alphanumeric">
+            <h2>Mixed Letters & Numbers Challenge</h2>
+            <div class="difficulty-info">🟡 Difficulty: Hard | Mix of letters and numbers</div>
+            <div class="canvas-container"><canvas id="canvas-mixed-alphanumeric" width="300" height="120"></canvas></div>
+            <div class="input-group">
+                <label for="input-mixed-alphanumeric">Enter the text you see:</label>
+                <input type="text" id="input-mixed-alphanumeric" placeholder="e.g., A3B5X" autocomplete="off">
+                <div class="hint">Case-sensitive, mix of letters and numbers</div>
+            </div>
+            <div class="button-group">
+                <button class="btn-secondary" onclick="generateChallenge('mixed-alphanumeric')">🔄 Refresh</button>
+                <button class="btn-primary" onclick="verifyChallenge('mixed-alphanumeric')">Verify</button>
+            </div>
+            <div id="message-mixed-alphanumeric"></div>
+        </div>
+
+        <div class="challenge-container" id="words-image">
+            <h2>Words from Image Challenge</h2>
+            <div class="difficulty-info">🟡 Difficulty: Hard | Recognizing words in an image</div>
+            <div class="canvas-container"><canvas id="canvas-words-image" width="300" height="120"></canvas></div>
+            <div class="input-group">
+                <label for="input-words-image">Enter the word you see:</label>
+                <input type="text" id="input-words-image" placeholder="e.g., Hello" autocomplete="off">
+                <div class="hint">Common English words</div>
+            </div>
+            <div class="button-group">
+                <button class="btn-secondary" onclick="generateChallenge('words-image')">🔄 Refresh</button>
+                <button class="btn-primary" onclick="verifyChallenge('words-image')">Verify</button>
+            </div>
+            <div id="message-words-image"></div>
+        </div>
+
+        <div class="challenge-container" id="multiple-words">
+            <h2>Multiple Words Challenge</h2>
+            <div class="difficulty-info">🔴 Difficulty: Very Hard | Multiple words to recognize</div>
+            <div class="canvas-container"><canvas id="canvas-multiple-words" width="300" height="140"></canvas></div>
+            <div class="input-group">
+                <label for="input-multiple-words">Enter the words you see (space-separated):</label>
+                <input type="text" id="input-multiple-words" placeholder="e.g., hello world" autocomplete="off">
+                <div class="hint">Two or more words separated by spaces</div>
+            </div>
+            <div class="button-group">
+                <button class="btn-secondary" onclick="generateChallenge('multiple-words')">🔄 Refresh</button>
+                <button class="btn-primary" onclick="verifyChallenge('multiple-words')">Verify</button>
+            </div>
+            <div id="message-multiple-words"></div>
+        </div>
+
+        <div class="challenge-container" id="handwritten">
+            <h2>Handwritten Text Challenge</h2>
+            <div class="difficulty-info">🔴 Difficulty: Very Hard | Handwritten-style text</div>
+            <div class="canvas-container"><canvas id="canvas-handwritten" width="300" height="120"></canvas></div>
+            <div class="input-group">
+                <label for="input-handwritten">Enter the handwritten text:</label>
+                <input type="text" id="input-handwritten" placeholder="e.g., Script" autocomplete="off">
+                <div class="hint">Cursive/script style handwriting</div>
+            </div>
+            <div class="button-group">
+                <button class="btn-secondary" onclick="generateChallenge('handwritten')">🔄 Refresh</button>
+                <button class="btn-primary" onclick="verifyChallenge('handwritten')">Verify</button>
+            </div>
+            <div id="message-handwritten"></div>
+        </div>
+
+        <div class="challenge-container" id="rotated">
+            <h2>Rotated Characters Challenge</h2>
+            <div class="difficulty-info">🟡 Difficulty: Hard | Characters at various angles</div>
+            <div class="canvas-container"><canvas id="canvas-rotated" width="300" height="120"></canvas></div>
+            <div class="input-group">
+                <label for="input-rotated">Enter the rotated characters:</label>
+                <input type="text" id="input-rotated" placeholder="e.g., ROTATED" autocomplete="off">
+                <div class="hint">Characters rotated at various angles</div>
+            </div>
+            <div class="button-group">
+                <button class="btn-secondary" onclick="generateChallenge('rotated')">🔄 Refresh</button>
+                <button class="btn-primary" onclick="verifyChallenge('rotated')">Verify</button>
+            </div>
+            <div id="message-rotated"></div>
+        </div>
+
+        <div class="challenge-container" id="background-noise">
+            <h2>Background Noise Challenge</h2>
+            <div class="difficulty-info">🔸 Difficulty: Medium | Text with background noise</div>
+            <div class="canvas-container"><canvas id="canvas-background-noise" width="300" height="120"></canvas></div>
+            <div class="input-group">
+                <label for="input-background-noise">Enter the text through the noise:</label>
+                <input type="text" id="input-background-noise" placeholder="e.g., NOISE" autocomplete="off">
+                <div class="hint">Ignore the background noise</div>
+            </div>
+            <div class="button-group">
+                <button class="btn-secondary" onclick="generateChallenge('background-noise')">🔄 Refresh</button>
+                <button class="btn-primary" onclick="verifyChallenge('background-noise')">Verify</button>
+            </div>
+            <div id="message-background-noise"></div>
+        </div>
+
+        <div class="challenge-container" id="overlapping">
+            <h2>Overlapping Letters Challenge</h2>
+            <div class="difficulty-info">🟡 Difficulty: Hard | Letters overlapping each other</div>
+            <div class="canvas-container"><canvas id="canvas-overlapping" width="300" height="120"></canvas></div>
+            <div class="input-group">
+                <label for="input-overlapping">Enter the overlapping letters:</label>
+                <input type="text" id="input-overlapping" placeholder="e.g., OVERLAP" autocomplete="off">
+                <div class="hint">Letters may overlap or blend together</div>
+            </div>
+            <div class="button-group">
+                <button class="btn-secondary" onclick="generateChallenge('overlapping')">🔄 Refresh</button>
+                <button class="btn-primary" onclick="verifyChallenge('overlapping')">Verify</button>
+            </div>
+            <div id="message-overlapping"></div>
+        </div>
+
+        <div class="challenge-container" id="different-fonts">
+            <h2>Different Fonts Challenge</h2>
+            <div class="difficulty-info">🟡 Difficulty: Hard | Characters in different fonts</div>
+            <div class="canvas-container"><canvas id="canvas-different-fonts" width="300" height="120"></canvas></div>
+            <div class="input-group">
+                <label for="input-different-fonts">Enter the text in various fonts:</label>
+                <input type="text" id="input-different-fonts" placeholder="e.g., FONTS" autocomplete="off">
+                <div class="hint">Each letter may be in a different font style</div>
+            </div>
+            <div class="button-group">
+                <button class="btn-secondary" onclick="generateChallenge('different-fonts')">🔄 Refresh</button>
+                <button class="btn-primary" onclick="verifyChallenge('different-fonts')">Verify</button>
+            </div>
+            <div id="message-different-fonts"></div>
+        </div>
+    </div>
+
+    <script>
+        const challenges = {
+            'distorted-letters': { type: 'letters', chars: 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', length: 6 },
+            'distorted-numbers': { type: 'numbers', chars: '0123456789', length: 6 },
+            'mixed-alphanumeric': { type: 'mixed', chars: 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789', length: 6 },
+            'words-image': { type: 'words', words: ['SECURITY', 'CHALLENGE', 'VERIFY', 'PROTECT', 'SYSTEM', 'DIGITAL', 'ONLINE', 'ACCESS'], length: 1 },
+            'multiple-words': { type: 'multiword', words: ['hello world', 'good morning', 'please verify', 'check this', 'captcha test'] },
+            'handwritten': { type: 'handwritten', chars: 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', length: 5 },
+            'rotated': { type: 'rotated', chars: 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', length: 6 },
+            'background-noise': { type: 'noise', chars: 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789', length: 6 },
+            'overlapping': { type: 'overlapping', chars: 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', length: 6 },
+            'different-fonts': { type: 'fonts', chars: 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', length: 5 }
+        };
+
+        let currentChallenges = {};
+
+        function switchChallenge(type) {
+            document.querySelectorAll('.challenge-btn').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+            document.querySelectorAll('.challenge-container').forEach(container => container.classList.remove('active'));
+            document.getElementById(type).classList.add('active');
+            if (!currentChallenges[type]) generateChallenge(type);
+        }
+
+        function generateChallenge(type) {
+            const config = challenges[type];
+            let answer;
+            switch(config.type) {
+                case 'letters': answer = generateRandomString(config.chars, config.length); break;
+                case 'numbers': answer = generateRandomString(config.chars, config.length); break;
+                case 'mixed': answer = generateRandomString(config.chars, config.length); break;
+                case 'words': answer = config.words[Math.floor(Math.random() * config.words.length)]; break;
+                case 'multiword': answer = config.words[Math.floor(Math.random() * config.words.length)]; break;
+                case 'handwritten': answer = generateRandomString(config.chars, config.length); break;
+                case 'rotated': answer = generateRandomString(config.chars, config.length); break;
+                case 'noise': answer = generateRandomString(config.chars, config.length); break;
+                case 'overlapping': answer = generateRandomString(config.chars, config.length); break;
+                case 'fonts': answer = generateRandomString(config.chars, config.length); break;
+            }
+            currentChallenges[type] = answer;
+            drawChallenge(type, answer);
+            document.getElementById(`input-${type}`).value = '';
+            document.getElementById(`message-${type}`).innerHTML = '';
+        }
+
+        function generateRandomString(chars, length) {
+            let result = '';
+            for (let i = 0; i < length; i++) result += chars[Math.floor(Math.random() * chars.length)];
+            return result;
+        }
+
+        function drawChallenge(type, text) {
+            const canvas = document.getElementById(`canvas-${type}`);
+            const ctx = canvas.getContext('2d');
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.fillStyle = '#f9f9f9';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            switch(type) {
+                case 'distorted-letters': drawDistortedText(ctx, text, canvas); break;
+                case 'distorted-numbers': drawDistortedText(ctx, text, canvas); break;
+                case 'mixed-alphanumeric': drawWaveText(ctx, text, canvas); break;
+                case 'words-image': drawStyledText(ctx, text, canvas); break;
+                case 'multiple-words': drawMultilineText(ctx, text, canvas); break;
+                case 'handwritten': drawHandwrittenText(ctx, text, canvas); break;
+                case 'rotated': drawRotatedText(ctx, text, canvas); break;
+                case 'background-noise': drawNoiseText(ctx, text, canvas); break;
+                case 'overlapping': drawOverlappingText(ctx, text, canvas); break;
+                case 'different-fonts': drawDifferentFontsText(ctx, text, canvas); break;
+            }
+        }
+
+        function drawDistortedText(ctx, text, canvas) {
+            ctx.strokeStyle = '#ddd';
+            ctx.lineWidth = 1;
+            for (let i = 0; i < 5; i++) {
+                ctx.beginPath();
+                ctx.moveTo(Math.random() * canvas.width, Math.random() * canvas.height);
+                ctx.lineTo(Math.random() * canvas.width, Math.random() * canvas.height);
+                ctx.stroke();
+            }
+            ctx.font = 'bold 40px Arial';
+            ctx.fillStyle = '#333';
+            ctx.textBaseline = 'middle';
+            for (let i = 0; i < text.length; i++) {
+                const x = 30 + i * 40;
+                const y = 60 + (Math.random() - 0.5) * 40;
+                const angle = (Math.random() - 0.5) * 0.5;
+                const skew = (Math.random() - 0.5) * 0.3;
+                ctx.save();
+                ctx.translate(x, y);
+                ctx.rotate(angle);
+                ctx.skewY(skew);
+                ctx.globalAlpha = 0.7 + Math.random() * 0.3;
+                ctx.fillText(text[i], 0, 0);
+                ctx.restore();
+            }
+            for (let i = 0; i < 20; i++) {
+                ctx.fillStyle = `rgba(0,0,0,${Math.random() * 0.3})`;
+                ctx.fillRect(Math.random() * canvas.width, Math.random() * canvas.height, 2, 2);
+            }
+        }
+
+        function drawWaveText(ctx, text, canvas) {
+            const waveHeight = 10;
+            ctx.font = 'bold 45px Arial';
+            ctx.fillStyle = '#333';
+            ctx.textBaseline = 'middle';
+            for (let i = 0; i < text.length; i++) {
+                const x = 30 + i * 40;
+                const wave = Math.sin((i / text.length) * Math.PI * 2) * waveHeight;
+                const y = 60 + wave;
+                ctx.save();
+                ctx.translate(x, y);
+                ctx.rotate(Math.sin(i * 0.2) * 0.15);
+                ctx.fillText(text[i], 0, 0);
+                ctx.restore();
+            }
+            ctx.strokeStyle = '#eee';
+            for (let i = 0; i < canvas.width; i += 20) {
+                ctx.beginPath();
+                ctx.moveTo(i, 0);
+                ctx.lineTo(i, canvas.height);
+                ctx.stroke();
+            }
+        }
+
+        function drawStyledText(ctx, text, canvas) {
+            ctx.font = 'bold 50px Georgia';
+            ctx.fillStyle = '#1a1a1a';
+            ctx.textBaseline = 'middle';
+            ctx.textAlign = 'center';
+            ctx.fillStyle = '#ccc';
+            ctx.fillText(text, canvas.width / 2 + 2, canvas.height / 2 + 2);
+            ctx.fillStyle = '#333';
+            ctx.fillText(text, canvas.width / 2, canvas.height / 2);
+            ctx.strokeStyle = '#ddd';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(20, canvas.height / 2 - 30);
+            ctx.lineTo(canvas.width - 20, canvas.height / 2 - 30);
+            ctx.stroke();
+        }
+
+        function drawMultilineText(ctx, text, canvas) {
+            const words = text.split(' ');
+            ctx.font = 'bold 35px Arial';
+            ctx.fillStyle = '#333';
+            ctx.textBaseline = 'middle';
+            ctx.textAlign = 'center';
+            const lineHeight = 50;
+            const startY = (canvas.height - (words.length - 1) * lineHeight) / 2;
+            words.forEach((word, index) => {
+                const y = startY + index * lineHeight;
+                ctx.fillText(word, canvas.width / 2, y);
+            });
+        }
+
+        function drawHandwrittenText(ctx, text, canvas) {
+            ctx.font = 'italic 45px Brush Script MT, cursive';
+            ctx.fillStyle = '#1a1a1a';
+            ctx.textBaseline = 'middle';
+            ctx.textAlign = 'center';
+            for (let i = 0; i < text.length; i++) {
+                const x = 50 + i * 40;
+                const y = 60 + Math.sin(i * 0.3) * 15;
+                ctx.save();
+                ctx.translate(x, y);
+                ctx.fillText(text[i], 0, 0);
+                ctx.restore();
+            }
+        }
+
+        function drawRotatedText(ctx, text, canvas) {
+            ctx.font = 'bold 40px Arial';
+            ctx.textBaseline = 'middle';
+            for (let i = 0; i < text.length; i++) {
+                const x = 30 + i * 40;
+                const y = 60;
+                const angle = (Math.random() - 0.5) * Math.PI * 0.5;
+                ctx.fillStyle = `hsl(${i * 30}, 70%, 40%)`;
+                ctx.save();
+                ctx.translate(x, y);
+                ctx.rotate(angle);
+                ctx.fillText(text[i], 0, 0);
+                ctx.restore();
+            }
+        }
+
+        function drawNoiseText(ctx, text, canvas) {
+            for (let i = 0; i < 500; i++) {
+                ctx.fillStyle = `rgba(${Math.random() * 255}, ${Math.random() * 255}, ${Math.random() * 255}, ${Math.random() * 0.3})`;
+                ctx.fillRect(Math.random() * canvas.width, Math.random() * canvas.height, Math.random() * 3 + 1, Math.random() * 3 + 1);
+            }
+            ctx.font = 'bold 45px Arial';
+            ctx.fillStyle = '#000';
+            ctx.textBaseline = 'middle';
+            for (let i = 0; i < text.length; i++) {
+                const x = 30 + i * 40;
+                const y = 60;
+                ctx.save();
+                ctx.globalAlpha = 0.9;
+                ctx.fillText(text[i], x, y);
+                ctx.restore();
+            }
+        }
+
+        function drawOverlappingText(ctx, text, canvas) {
+            ctx.font = 'bold 50px Arial';
+            ctx.textBaseline = 'middle';
+            for (let i = 0; i < text.length; i++) {
+                const x = 20 + i * 35;
+                const y = 60;
+                ctx.fillStyle = `rgba(50, 100, 200, 0.4)`;
+                ctx.fillText(text[i], x, y);
+                ctx.fillStyle = `rgba(200, 50, 100, 0.3)`;
+                ctx.fillText(text[i], x + 5, y + 3);
+            }
+        }
+
+        function drawDifferentFontsText(ctx, text, canvas) {
+            const fonts = ['Arial', 'Times New Roman', 'Courier New', 'Georgia', 'Verdana', 'Trebuchet MS'];
+            ctx.textBaseline = 'middle';
+            ctx.fillStyle = '#333';
+            for (let i = 0; i < text.length; i++) {
+                const x = 30 + i * 50;
+                const y = 60;
+                const font = fonts[i % fonts.length];
+                ctx.font = `bold 40px ${font}`;
+                ctx.fillText(text[i], x, y);
+            }
+        }
+
+        function verifyChallenge(type) {
+            const input = document.getElementById(`input-${type}`).value;
+            const answer = currentChallenges[type];
+            const messageDiv = document.getElementById(`message-${type}`);
+            if (input.toUpperCase() === answer.toUpperCase() || input === answer) {
+                messageDiv.className = 'message success';
+                messageDiv.textContent = '✓ Correct! Challenge verified.';
+                return true;
+            } else {
+                messageDiv.className = 'message error';
+                messageDiv.textContent = '✗ Incorrect. Please try again.';
+                setTimeout(() => generateChallenge(type), 1500);
+                return false;
+            }
+        }
+
+        generateChallenge('distorted-letters');
+    </script>
+</body>
+</html>
